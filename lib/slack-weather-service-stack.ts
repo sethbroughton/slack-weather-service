@@ -6,6 +6,8 @@ import * as lambda from '@aws-cdk/aws-lambda'
 import * as logs from '@aws-cdk/aws-logs';
 import * as events from '@aws-cdk/aws-events'
 import * as path from 'path';
+import { Rule } from '@aws-cdk/aws-events';
+import * as targets from '@aws-cdk/aws-events-targets'
 
 export class SlackWeatherServiceStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -28,6 +30,23 @@ export class SlackWeatherServiceStack extends cdk.Stack {
     })
 
     events.EventBus.grantAllPutEvents(handler);
+
+    const slackRule = new Rule(this, 'SlackRule', {
+      eventPattern: {
+        detail: {
+          event: {
+            type: 'app_mention'
+          }
+        }
+      }
+    })
+
+    const log = new logs.LogGroup(this, 'SlackWeatherApp', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      retention: logs.RetentionDays.ONE_DAY
+    })
+
+    slackRule.addTarget(new targets.CloudWatchLogGroup(log))
     
     new cdk.CfnOutput(this, "ApiEndpoint", {
       value: httpApi.apiEndpoint,
