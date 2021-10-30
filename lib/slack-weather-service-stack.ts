@@ -6,7 +6,6 @@ import * as lambda from '@aws-cdk/aws-lambda'
 import * as logs from '@aws-cdk/aws-logs';
 import * as events from '@aws-cdk/aws-events'
 import * as path from 'path';
-import { EventBus } from '@aws-cdk/aws-events';
 
 export class SlackWeatherServiceStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -17,7 +16,7 @@ export class SlackWeatherServiceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       logRetention: logs.RetentionDays.ONE_WEEK,
       environment: {
-        SLACK_SIGNING_SECRET: '',
+        SLACK_SIGNING_SECRET: cdk.SecretValue.secretsManager('slack-weather').toString()
       }
     })
 

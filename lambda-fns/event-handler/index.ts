@@ -13,14 +13,14 @@ export async function handler(event: any): Promise<any> {
 
         if (!event.body) throw new Error('Missing body');
 
-        if (!event.headers['X-Slack-Signature']) throw new Error('Missing X-Slack-Signature');
+        if (!event.headers['x-slack-signature']) throw new Error('Missing X-Slack-Signature');
 
-        if (!event.headers['X-Slack-Request-Timestamp']) throw new Error('Missing X-Slack-Request-Timestamp');
+        if (!event.headers['x-slack-request-timestamp']) throw new Error('Missing X-Slack-Request-Timestamp');
 
         if (!verifyRequestSignature({
             body: event.body,
-            requestSignature: event.headers['X-Slack-Signature'],
-            requestTimestamp: parseInt(event.headers['X-Slack-Request-Timestamp'], 10),
+            requestSignature: event.headers['x-slack-signature'],
+            requestTimestamp: parseInt(event.headers['x-slack-request-timestamp'], 10),
             signingSecret: process.env.SLACK_SIGNING_SECRET,
         })) {
             response.statusCode = 403;

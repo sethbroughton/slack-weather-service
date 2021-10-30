@@ -30,6 +30,7 @@
     "@aws-cdk/core": "1.130.0",
     "aws-sdk": "^2.1018.0",
     "crypto": "^1.0.1",
+    "esbuild": "^0.13.11",
     "source-map-support": "^0.5.16"
   }
 }
