@@ -25,7 +25,7 @@ export class SlackWeatherServiceStack extends cdk.Stack {
       }
     })
 
-    events.EventBus.grantAllPutEvents(handler)
+    events.EventBus.grantAllPutEvents(handler);
 
     const httpApi = new apigateway.HttpApi(this, 'SlackApi', {
       defaultIntegration: new integrations.LambdaProxyIntegration({
@@ -35,16 +35,16 @@ export class SlackWeatherServiceStack extends cdk.Stack {
     })
 
     const slackRule = new Rule(this, 'SlackRule', {
-      eventPattern: {
-        detail: {
-          event: {
-            type: ['app_mention'],
-          },
-        },
-        resources: ['A02KQAHM3K6'],
-        source: ['slack'],
+      eventBus: eventBus,
+  eventPattern: {
+    detail: {
+      event: {
+        type: ['app_mention'],
       },
-      eventBus: eventBus
+    },
+
+    source: ['slack'],
+  },
     })
 
     const log = new logs.LogGroup(this, 'SlackWeatherApp', {

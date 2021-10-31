@@ -1,13 +1,13 @@
+import { verifyRequestSignature } from './signature';
 import { EventBridge } from 'aws-sdk';
-import { verifyRequestSignature } from './signature'
+exports.handler = async function (event:any) {
+    console.log('Event: ' + JSON.stringify(event, undefined, 2));
 
-export async function handler(event: any): Promise<any> {
-    console.log(JSON.stringify(event, undefined, 2));
-
-    const response = {
+    const response: any = {
         statusCode: 200,
-        body: '',
+        body: "Generating the report..."
     }
+
     try {
         if (!process.env.SLACK_SIGNING_SECRET) throw new Error('The environment variable SLACK_SIGNING_SECRET is not defined');
 
@@ -24,38 +24,35 @@ export async function handler(event: any): Promise<any> {
             signingSecret: process.env.SLACK_SIGNING_SECRET,
         })) {
             response.statusCode = 403;
+            
             return response;
         }
 
-        const body = JSON.parse(event.body);
-        console.log('Body: %j', body);
+        const body = event.body;
+        console.log('Body: ' + body);
 
-        if (body.type === 'url_verification') { // Slack URL verification, respond with challenge
-            console.log('URL verification');
-            response.body = JSON.stringify({ challenge: body.challenge });
-            return response;
-        }
-
-        const eventBridge = new EventBridge();
+        const eventBridge = new EventBridge({ apiVersion: '2015-10-07' });
 
         const putEvents = await eventBridge.putEvents({
             Entries: [
                 {
-                    Detail: event.body,
+                    Detail: JSON.stringify({"event": body}),
                     DetailType: 'Slack Event',
                     Source: 'slack',
-                    Resources: [body.api_app_id],
-                    Time: new Date(body.event_time),
+                    EventBusName: process.env.EVENT_BUS_NAME
+                    // Resources: [body.user_name],
+                    // Time: new Date(body.event_time)
                 },
             ],
         }).promise();
         console.log('Put events: %j', putEvents);
 
         return response;
+
     } catch (err) {
         console.log(err);
         response.statusCode = 500;
         return response;
     }
-}
 
+}
