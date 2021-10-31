@@ -13,14 +13,19 @@ export class SlackWeatherServiceStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const eventBus = new events.EventBus(this, 'EventBus');
+
     const handler = new NodejsFunction(this, 'handler', {
       entry: path.join(__dirname, '..', 'lambda-fns', 'event-handler', 'index.ts'),
       runtime: lambda.Runtime.NODEJS_14_X,
       logRetention: logs.RetentionDays.ONE_WEEK,
       environment: {
-        SLACK_SIGNING_SECRET: cdk.SecretValue.secretsManager('slack-weather').toString()
+        SLACK_SIGNING_SECRET: cdk.SecretValue.secretsManager('slack-weather').toString(),
+        EVENT_BUS_NAME: eventBus.eventBusName
       }
     })
+
+    events.EventBus.grantAllPutEvents(handler)
 
     const httpApi = new apigateway.HttpApi(this, 'SlackApi', {
       defaultIntegration: new integrations.LambdaProxyIntegration({
@@ -29,16 +34,17 @@ export class SlackWeatherServiceStack extends cdk.Stack {
       )
     })
 
-    events.EventBus.grantAllPutEvents(handler);
-
     const slackRule = new Rule(this, 'SlackRule', {
       eventPattern: {
         detail: {
           event: {
-            type: 'app_mention'
-          }
-        }
-      }
+            type: ['app_mention'],
+          },
+        },
+        resources: ['A02KQAHM3K6'],
+        source: ['slack'],
+      },
+      eventBus: eventBus
     })
 
     const log = new logs.LogGroup(this, 'SlackWeatherApp', {
@@ -47,6 +53,7 @@ export class SlackWeatherServiceStack extends cdk.Stack {
     })
 
     slackRule.addTarget(new targets.CloudWatchLogGroup(log))
+    // slackRule.addTarget(new ta)
     
     new cdk.CfnOutput(this, "ApiEndpoint", {
       value: httpApi.apiEndpoint,

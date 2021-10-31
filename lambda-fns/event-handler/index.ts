@@ -36,7 +36,7 @@ export async function handler(event: any): Promise<any> {
             return response;
         }
 
-        const eventBridge = new EventBridge({ apiVersion: '2015-10-07' });
+        const eventBridge = new EventBridge();
 
         const putEvents = await eventBridge.putEvents({
             Entries: [
